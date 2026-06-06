@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SecureCloud Guardian</title>
+    <style>
+        body { font-family: Arial; background: #1a1a2e; color: #eee; padding: 20px; }
+        h1 { color: #e94560; }
+        input { width: 60%; padding: 10px; border-radius: 5px; border: none; }
+        button { padding: 10px 20px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .card { background: #16213e; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #e94560; }
+        .verified { border-left-color: #00b894; }
+        .stats { display: flex; gap: 20px; margin: 20px 0; }
+        .stat { background: #16213e; padding: 20px; border-radius: 8px; text-align: center; flex: 1; }
+        .stat h2 { color: #e94560; font-size: 2em; margin: 0; }
+    </style>
+</head>
+<body>
+    <h1>🛡️ SecureCloud Guardian</h1>
+    <input id="repo" placeholder="https://github.com/user/repo" />
+    <button onclick="scan()">🔍 Scanner</button>
+    <div class="stats">
+        <div class="stat"><h2 id="total">0</h2><p>Total Secrets</p></div>
+        <div class="stat"><h2 id="verified" style="color:#00b894">0</h2><p>Vérifiés</p></div>
+        <div class="stat"><h2 id="unverified">0</h2><p>Non Vérifiés</p></div>
+    </div>
+    <div id="results"></div>
+    <script>
+    async function scan() {
+        const repo = document.getElementById("repo").value;
+        document.getElementById("results").innerHTML = "<p>⏳ Scan en cours...</p>";
+        const r = await fetch("http://localhost:8000/scan?repo=" + encodeURIComponent(repo));
+        const data = await r.json();
+        document.getElementById("total").textContent = data.total;
+        document.getElementById("verified").textContent = data.verified;
+        document.getElementById("unverified").textContent = data.total - data.verified;
+        document.getElementById("results").innerHTML = data.findings.map(f => `
+            <div class="card ${f.Verified ? 'verified' : ''}">
+                <b>${f.Verified ? '✅ VÉRIFIÉ' : '⚠️ NON VÉRIFIÉ'}</b> | ${f.DetectorName}<br>
+                <small>Fichier: ${f.SourceMetadata?.Data?.Github?.file || 'N/A'}</small>
+            </div>
+        `).join("");
+    }
+    </script>
+</body>
+</html>
